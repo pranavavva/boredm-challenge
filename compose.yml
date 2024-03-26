@@ -1,0 +1,18 @@
+services:
+    backend:
+        container_name: backend
+        build: ./backend
+        ports:
+            - "5000:5000"
+        environment:
+            - QUART_APP=app:app
+            - QUART_ENV=production
+            - QUART_DEBUG=FALSE
+
+    frontend:
+        container_name: frontend
+        build: ./frontend
+        ports:
+            - "80:80"
+        depends_on:
+            - backend
