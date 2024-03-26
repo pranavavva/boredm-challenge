@@ -1,6 +1,7 @@
 import asyncio
 
 from quart import Quart, websocket
+from quart_cors import cors
 
 from app.broker import Broker
 from app.models.message import Message, MessageSchema
@@ -28,6 +29,7 @@ async def process_message(message: str) -> str:
 
 def init_app() -> Quart:
     application = Quart(__name__)
+    application = cors(application, allow_origin="*")
     broker = Broker()
 
     async def _receive() -> None:
