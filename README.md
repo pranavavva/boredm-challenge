@@ -1,30 +1,22 @@
-# React + TypeScript + Vite
+# boredm-challenge
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+My submission for the BoreDM Full Stack Developer Challenge [here](https://boredmlogs.notion.site/BoreDM-Full-Stack-Developer-Final-Coding-Challenge-5d8cd0917aa148bb8d54f2dc11ad349c).
 
-Currently, two official plugins are available:
+## Installation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Toolchain versions:
+- Node.js: 21.7.1
+- Pnpm: 8.15.5
+- Python: 3.12.2
 
-## Expanding the ESLint configuration
+The backend and frontend are self-contained in their own subdirectories. The backend is a Python Quart app and the frontend is a React app built using the Vite framework.
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### Docker
 
-- Configure the top-level `parserOptions` property like this:
+The easiest way to run the app is to use Docker. The `compose.yml` in the root of the repository will build and run the app.
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+```bash
+docker compose up --build
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+The application will then be available on `http://localhost:80`.
