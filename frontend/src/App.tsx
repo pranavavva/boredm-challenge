@@ -1,40 +1,20 @@
-// import * as React from "react";
+import * as React from "react";
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { DataGrid } from "@mui/x-data-grid";
+import useWebSocket from "./useWebSocket";
 
 export default function App() {
-    // simple websocket test
-    const ws = new WebSocket("ws://localhost:5000/ws");
-    ws.onopen = () => {
-        ws.send(
-            JSON.stringify({
-                action: "customer:create",
-                payload: [
-                    {
-                        name: "John Doe",
-                        email: "john.doe@example.com",
-                    },
-                    {
-                        name: "Jane Doe",
-                        email: "jane.doe@example.com",
-                    }
-                ],
-            })
-        );
+    const { sendMessage, lastMessage, status } = useWebSocket(
+        "ws://localhost:5000/ws"
+    );
 
-        ws.send(
-            JSON.stringify({
-                action: "customer:delete-all",
-                payload: [],
-            })
-        );
-    };
-
-    ws.onmessage = (msg: MessageEvent) => {
-        console.log(JSON.parse(msg.data));
-    };
+    React.useEffect(() => {
+        if (lastMessage) {
+            console.log("Received message:", lastMessage);
+        }
+    }, [lastMessage]);
 
     return (
         <>
@@ -42,6 +22,23 @@ export default function App() {
                 <Box sx={{ my: 4 }}>
                     <Typography variant="h4" component="h1" gutterBottom>
                         BoreDM Full Stack Developer Final Challenge
+                        <button
+                            onClick={() =>
+                                sendMessage(
+                                    JSON.stringify({
+                                        action: "customer:create",
+                                        payload: [
+                                            {
+                                                name: "Pranav Avva",
+                                                email: "avva@prineton.edu",
+                                            },
+                                        ],
+                                    })
+                                )
+                            }
+                        >
+                            Send Message
+                        </button>
                     </Typography>
                 </Box>
             </Container>

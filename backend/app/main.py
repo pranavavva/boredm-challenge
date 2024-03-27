@@ -7,8 +7,8 @@ from quart_cors import cors
 from marshmallow.exceptions import ValidationError
 
 from app.broker import Broker
-from app.models.customer import CustomerSchema
-from app.models.item import ItemSchema
+from app.models.customer import Customer, CustomerSchema
+from app.models.item import Item, ItemSchema
 from app.models.message import MessageSchema, MessageAction
 
 
@@ -17,8 +17,24 @@ from app.models.message import MessageSchema, MessageAction
 # For the purposes of this challenge, it will suffice. I use separate locks
 # here because the customer and item dbs have no relation to each other and
 # can be updated independently.
-customer_db = {}
-item_db = {}
+customer_db: dict[UUID, Customer] = {
+    UUID("af516bd3-0dc2-493b-a5de-01e9ccf3566c"): Customer(
+        id=UUID("af516bd3-0dc2-493b-a5de-01e9ccf3566c"),
+        name="Alice",
+        email="alice@example.com",
+    ),
+    UUID("49a43a89-2319-413d-a74b-ec5108ce9a3b"): Customer(
+        id=UUID("49a43a89-2319-413d-a74b-ec5108ce9a3b"),
+        name="Bob",
+        email="bob@example.com",
+    ),
+    UUID("7f918cec-b723-4e0d-b355-6b7933b8823e"): Customer(
+        id=UUID("7f918cec-b723-4e0d-b355-6b7933b8823e"),
+        name="Charlie",
+        email="charlie@example.com",
+    ),
+}
+item_db: dict[UUID, Item] = {}
 
 customer_lock = asyncio.Lock()
 item_lock = asyncio.Lock()
@@ -37,9 +53,9 @@ async def process_message(message: str) -> tuple[str, bool]:
     For the *:create actions, the payload is expected to be a list of dictionaries
     corresponding to the objects to be created. This corresponds to a POST HTTP verb.
 
-    # For the *:read actions, the payload is expected to be a dictionary with the
-    # key "id" corresponding to the object to be read. *:read-all does not require
-    # a payload and will return all objects in the database. This corresponds to a GET HTTP verb.
+    For the *:read actions, the payload is expected to be a dictionary with the
+    key "id" corresponding to the object to be read. *:read-all does not require
+    a payload and will return all objects in the database. This corresponds to a GET HTTP verb.
 
     For the *:update actions, the payload is expected to be a dictionary with the
     key "id" corresponding to the object to be updated and the key "data" corresponding
@@ -150,10 +166,11 @@ def init_app() -> Quart:
         """Receive messages from the clients and publish them to the broker."""
         while True:
             message = await websocket.receive()
-            # process message here
             result, republish = await process_message(message)
 
-            # if the result is not None, determine if we should republish the new state to everyone
+            # If the result is not None, determine if we should republish the new state to everyone
+            # If the result is None, that means an error occurred during processing, so we should
+            # simply drop the message
             if result:
                 if republish:
                     await broker.publish_all(result)

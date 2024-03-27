@@ -1,11 +1,11 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 from marshmallow import Schema, fields, post_load
 
 
 class Customer:
     """A simple customer class. Customer has name, email, and phone number."""
 
-    def __init__(self, name: str, email: str):
+    def __init__(self, name: str, email: str, id: UUID = uuid4()):
         self.id = uuid4()
         self.name = name
         self.email = email
