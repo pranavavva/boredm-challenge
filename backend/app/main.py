@@ -40,6 +40,10 @@ def init_app() -> Quart:
             result = await process_message(message)
             await broker.publish(f"The server received the message: {result}")
 
+    @application.route("/healthcheck")
+    async def healthcheck() -> str:
+        return "OK", 200
+
     @application.websocket("/ws")
     async def ws() -> None:
         await websocket.send("Connected to the server.")

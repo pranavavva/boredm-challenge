@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["hypercorn", "app:app", "--bind", "0.0.0.0:5000"]
+CMD ["hypercorn", "app:app", "--config", "hypercorn.toml"]
