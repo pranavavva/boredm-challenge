@@ -18,7 +18,7 @@ export default function App() {
                     },
                     {
                         name: "Jane Doe",
-                        email: "jane.doeexample.com",
+                        email: "jane.doe@example.com",
                     }
                 ],
             })
