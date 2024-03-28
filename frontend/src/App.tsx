@@ -3,18 +3,10 @@ import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { DataGrid } from "@mui/x-data-grid";
-import useWebSocket from "./useWebSocket";
+import { useSocket } from "./utils/useSocket";
 
 export default function App() {
-    const { sendMessage, lastMessage, status } = useWebSocket(
-        "ws://localhost:5000/ws"
-    );
-
-    React.useEffect(() => {
-        if (lastMessage) {
-            console.log("Received message:", lastMessage);
-        }
-    }, [lastMessage]);
+    const socket = useSocket();
 
     return (
         <>
@@ -23,19 +15,30 @@ export default function App() {
                     <Typography variant="h4" component="h1" gutterBottom>
                         BoreDM Full Stack Developer Final Challenge
                         <button
-                            onClick={() =>
-                                sendMessage(
+                            onClick={() => {
+                                socket.send(
                                     JSON.stringify({
                                         action: "customer:create",
                                         payload: [
                                             {
                                                 name: "Pranav Avva",
-                                                email: "avva@prineton.edu",
+                                                email: "avva@princeton.edu",
                                             },
                                         ],
                                     })
-                                )
-                            }
+                                );
+                                socket.send(
+                                    JSON.stringify({
+                                        action: "customer:create",
+                                        payload: [
+                                            {
+                                                name: "Mary Jane",
+                                                email: "mary.jane@example.com",
+                                            },
+                                        ],
+                                    })
+                                );
+                            }}
                         >
                             Send Message
                         </button>

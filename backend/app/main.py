@@ -19,22 +19,41 @@ from app.models.message import MessageSchema, MessageAction
 # can be updated independently.
 customer_db: dict[UUID, Customer] = {
     UUID("af516bd3-0dc2-493b-a5de-01e9ccf3566c"): Customer(
-        id=UUID("af516bd3-0dc2-493b-a5de-01e9ccf3566c"),
+        customer_id=UUID("af516bd3-0dc2-493b-a5de-01e9ccf3566c"),
         name="Alice",
         email="alice@example.com",
     ),
     UUID("49a43a89-2319-413d-a74b-ec5108ce9a3b"): Customer(
-        id=UUID("49a43a89-2319-413d-a74b-ec5108ce9a3b"),
+        customer_id=UUID("49a43a89-2319-413d-a74b-ec5108ce9a3b"),
         name="Bob",
         email="bob@example.com",
     ),
     UUID("7f918cec-b723-4e0d-b355-6b7933b8823e"): Customer(
-        id=UUID("7f918cec-b723-4e0d-b355-6b7933b8823e"),
+        customer_id=UUID("7f918cec-b723-4e0d-b355-6b7933b8823e"),
         name="Charlie",
         email="charlie@example.com",
     ),
 }
-item_db: dict[UUID, Item] = {}
+item_db: dict[UUID, Item] = {
+    UUID("7f3329cf-b45b-4e1e-b380-0b27bf9e6d46"): Item(
+        item_id=UUID("7f3329cf-b45b-4e1e-b380-0b27bf9e6d46"),
+        name="Apple",
+        quantity=10,
+        price=0.5,
+    ),
+    UUID("f6d1d4b5-1e9b-4b4b-8e4f-1f1b4f8d0c8f"): Item(
+        item_id=UUID("f6d1d4b5-1e9b-4b4b-8e4f-1f1b4f8d0c8f"),
+        name="Banana",
+        quantity=5,
+        price=0.25,
+    ),
+    UUID("f1c2c4b7-0a9a-4f2b-8d1e-1f1b4f8d0c8f"): Item(
+        item_id=UUID("f1c2c4b7-0a9a-4f2b-8d1e-1f1b4f8d0c8f"),
+        name="Cherry",
+        quantity=20,
+        price=0.1,
+    ),
+}
 
 customer_lock = asyncio.Lock()
 item_lock = asyncio.Lock()
@@ -83,9 +102,12 @@ async def process_message(message: str) -> tuple[str, bool]:
 
                 async with customer_lock:
                     for item in payload:
-                        customer_db[item.id] = item
+                        customer_db[item.customer_id] = item
             case MessageAction.CUSTOMER_READ:
-                return CustomerSchema().dumps(customer_db[message.payload["id"]]), False
+                return (
+                    CustomerSchema().dumps(customer_db[message.payload["customer_id"]]),
+                    False,
+                )
             case MessageAction.CUSTOMER_READ_ALL:
                 return CustomerSchema(many=True).dumps(customer_db.values()), False
             case MessageAction.CUSTOMER_UPDATE:
@@ -96,7 +118,7 @@ async def process_message(message: str) -> tuple[str, bool]:
                     raise _MyBreak() from ve
 
                 async with customer_lock:
-                    customer_db[payload.id] = payload
+                    customer_db[payload.customer_id] = payload
             case MessageAction.CUSTOMER_DELETE:
                 async with customer_lock:
                     for item in message.payload:
@@ -113,9 +135,9 @@ async def process_message(message: str) -> tuple[str, bool]:
 
                 async with item_lock:
                     for item in payload:
-                        item_db[item.id] = item
+                        item_db[item.item_id] = item
             case MessageAction.ITEM_READ:
-                return ItemSchema().dumps(item_db[message.payload["id"]]), False
+                return ItemSchema().dumps(item_db[message.payload["item_id"]]), False
             case MessageAction.ITEM_READ_ALL:
                 return ItemSchema(many=True).dumps(item_db.values()), False
             case MessageAction.ITEM_UPDATE:
@@ -126,7 +148,7 @@ async def process_message(message: str) -> tuple[str, bool]:
                     raise _MyBreak() from ve
 
                 async with item_lock:
-                    item_db[payload.id] = payload
+                    item_db[payload.item_id] = payload
             case MessageAction.ITEM_DELETE:
                 async with item_lock:
                     for item in message.payload:
