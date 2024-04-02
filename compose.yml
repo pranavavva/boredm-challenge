@@ -3,7 +3,7 @@ services:
         container_name: backend
         build: ./backend
         ports:
-            - "5000:5000"
+            - "5555:5555"
         environment:
             - QUART_APP=app:app
             - QUART_ENV=production

@@ -1,6 +1,6 @@
 import { useEffect, useState, createContext, ReactNode } from "react";
 
-const WEBSOCKET_URL = "ws://localhost:5000/ws";
+const WEBSOCKET_URL = "ws://localhost:5555/ws";
 const SOCKET_RECONNECT_TIMEOUT = 5000;
 
 const websocket = new WebSocket(WEBSOCKET_URL);

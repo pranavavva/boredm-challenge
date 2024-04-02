@@ -10,13 +10,13 @@ export default defineConfig({
     open: true,
     proxy: {
       "/api": {
-        target: "http://0.0.0.0:5000",
+        target: "http://0.0.0.0:5555",
         changeOrigin: true,
         secure: false,
         rewrite: (path: string) => path.replace(/^\/api/, ""),
       },
       "/ws": {
-        target: "ws://0.0.0.0:5000",
+        target: "ws://0.0.0.0:5555",
         ws: true,
       },
     },

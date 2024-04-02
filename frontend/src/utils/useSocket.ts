@@ -1,12 +1,33 @@
-import { useCallback, useEffect, useContext } from "react";
+import { useState, useCallback, useEffect, useContext } from "react";
 import { SocketContext } from "./SocketProvider";
+import { IPayload } from "./types";
 
-export const useSocket = () => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isIPayload = (payload: any): payload is IPayload => {
+    return (
+        payload &&
+        payload.action &&
+        typeof payload.action === typeof "Action" &&
+        payload.payload &&
+        Array.isArray(payload.payload)
+    );
+};
+
+export const useSocket = (): [IPayload, (payload: IPayload) => void] => {
     const socket = useContext(SocketContext);
+    const [lastMessage, setLastMessage] = useState<IPayload>({} as IPayload);
+
+    const sendPayload = (payload: IPayload) => {
+        if (!isIPayload(payload))
+            throw new Error(
+                "Invalid payload format. Please use the IPayload interface."
+            );
+        socket.send(JSON.stringify(payload));
+    };
 
     const onMessage = useCallback((message: MessageEvent) => {
         const data = JSON.parse(message?.data);
-        console.log(data);
+        setLastMessage(data);
     }, []);
 
     useEffect(() => {
@@ -17,5 +38,5 @@ export const useSocket = () => {
         };
     }, [socket, onMessage]);
 
-    return socket;
+    return [lastMessage, sendPayload];
 };

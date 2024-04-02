@@ -70,7 +70,8 @@ async def process_message(message: str) -> tuple[str, bool]:
     a state republish.
 
     For the *:create actions, the payload is expected to be a list of dictionaries
-    corresponding to the objects to be created. This corresponds to a POST HTTP verb.
+    corresponding to the objects to be created. Even if only one object is to be created,
+    it still must be enclosed in an array. This corresponds to a POST HTTP verb.
 
     For the *:read actions, the payload is expected to be a dictionary with the
     key "id" corresponding to the object to be read. *:read-all does not require
