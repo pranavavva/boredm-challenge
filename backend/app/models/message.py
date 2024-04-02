@@ -33,26 +33,35 @@ class Message:
         self.payload = payload
 
 
-class DictOrListOfDictsField(fields.Field):
+class PayloadField(fields.Field):
     def _deserialize(self, value, attr, data, **kwargs):
         if isinstance(value, dict):
-            # If the value is a dict, return it directly or wrap it in a list, based on your needs.
+            # If the value is a dict, return it directly.
             return value
-        if isinstance(value, list):
-            # If the value is a list, validate that all elements are dicts.
+        elif isinstance(value, list):
+            # Check if all elements are dicts.
             if all(isinstance(item, dict) for item in value):
                 return value
-            raise ValidationError("All elements in the list must be dicts.")
-        raise ValidationError(
-            "Invalid input type. Must be a dict or a list of dicts."
-        )
+            # Check if all elements are strings.
+            elif all(isinstance(item, str) for item in value):
+                return value
+            else:
+                # If the list contains neither all dicts nor all strings, raise an error.
+                raise ValidationError(
+                    "All elements in the list must be dicts or strings."
+                )
+        else:
+            # If the input is neither a dict nor a list, raise an error.
+            raise ValidationError(
+                "Invalid input type. Must be a dict, a list of dicts, or a list of strings."
+            )
 
 
 class MessageSchema(Schema):
     """A WebSocekt message schema. Message has action and payload fields."""
 
     action = fields.Enum(MessageAction, by_value=True)
-    payload = DictOrListOfDictsField()
+    payload = PayloadField()
 
     @post_load
     def make_message(self, data, **kwargs):

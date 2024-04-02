@@ -17,7 +17,7 @@ export enum Action {
 export interface IPayload {
     // action must match one of the Action enum values
     action: Action;
-    payload: object[];
+    payload: object[] | string[];
 }
 
 export interface IStateResponse {

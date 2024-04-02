@@ -2,18 +2,38 @@ import * as React from "react";
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import DeleteIcon from "@mui/icons-material/DeleteOutlined";
+
+import {
+    DataGrid,
+    GridActionsCellItem,
+    GridColDef,
+    GridEventListener,
+    GridRowEditStopReasons,
+    GridRowModes,
+    GridRowModesModel,
+} from "@mui/x-data-grid";
 import { useSocket } from "./utils/useSocket";
 import { Action, IItem, ICustomer } from "./utils/types";
 
 export default function App() {
     const [lastMessage, sendPayload] = useSocket();
 
-    // these could be undefined on first render (before the websocket connection is established)
+    const [customerRowModesModel, setCustomerRowModesModel] =
+        React.useState<GridRowModesModel>({});
+    const [itemRowModesModel, setItemRowModesModel] =
+        React.useState<GridRowModesModel>({});
+
     const [items, setItems] = React.useState<IItem[]>([]);
     const [customers, setCustomers] = React.useState<ICustomer[]>([]);
 
-    // update the state when a new message is received if the lastMessage isn't defined, keep the existing state
+    const handleRowEditStop: GridEventListener<'rowEditStop'> = (params, event) => {
+        if (params.reason === GridRowEditStopReasons.rowFocusOut) {
+          event.defaultMuiPrevented = false;
+        }
+      };
+
+    // update the state when a new message is received, if the lastMessage isn't defined, keep the existing state
     React.useEffect(() => {
         setCustomers(lastMessage?.customer ? lastMessage.customer : customers);
         setItems(lastMessage?.item ? lastMessage.item : items);
@@ -35,8 +55,33 @@ export default function App() {
                     editable: true,
                     width: 200,
                 },
+                {
+                    field: "actions",
+                    type: "actions",
+                    headerName: "Actions",
+                    width: 100,
+                    cellClassName: "actions",
+                    getActions: ({ id }) => {
+                        const isInEditMode =
+                            customerRowModesModel[id]?.mode ===
+                            GridRowModes.Edit;
+                        if (isInEditMode) return []; // TODO change this later
+                        return [
+                            <GridActionsCellItem
+                                icon={<DeleteIcon />}
+                                label="Delete"
+                                onClick={() => {
+                                    sendPayload({
+                                        action: Action.CUSTOMER_DELETE,
+                                        payload: [id as string],
+                                    });
+                                }}
+                            />,
+                        ];
+                    },
+                },
             ],
-            []
+            [customerRowModesModel, sendPayload]
         );
 
     const itemColumns: GridColDef<(typeof items)[number]>[] = React.useMemo(
@@ -78,7 +123,11 @@ export default function App() {
                                 },
                             }}
                             processRowUpdate={(newRow, oldRow) => {
-                                console.log("Processing row update", newRow, oldRow);
+                                console.log(
+                                    "Processing row update",
+                                    newRow,
+                                    oldRow
+                                );
                                 sendPayload({
                                     action: Action.CUSTOMER_UPDATE,
                                     payload: [newRow],
@@ -89,6 +138,8 @@ export default function App() {
                             onProcessRowUpdateError={(error) => {
                                 console.error("error", error);
                             }}
+                            rowModesModel={customerRowModesModel}
+                            onRowEditStop={handleRowEditStop}
                             pageSizeOptions={[5]}
                             checkboxSelection
                             disableRowSelectionOnClick
@@ -112,7 +163,11 @@ export default function App() {
                             },
                         }}
                         processRowUpdate={(newRow, oldRow) => {
-                            console.log("Processing row update", newRow, oldRow);
+                            console.log(
+                                "Processing row update",
+                                newRow,
+                                oldRow
+                            );
                             sendPayload({
                                 action: Action.ITEM_UPDATE,
                                 payload: [newRow],

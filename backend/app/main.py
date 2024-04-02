@@ -12,6 +12,12 @@ from app.models.customer import Customer, CustomerSchema
 from app.models.item import Item, ItemSchema
 from app.models.message import MessageSchema, MessageAction
 
+# Some controls for the starting state of the database
+# these wouldn't be present in a real application
+STARTING_NUM_CUSTOMERS = 3
+STARTING_NUM_ITEMS = 3
+customer_uuids = [uuid4() for _ in range(STARTING_NUM_CUSTOMERS)]
+item_uuids = [uuid4() for _ in range(STARTING_NUM_ITEMS)]
 
 # Using global variables is...distateful.
 # In practice we'd use a proper database that supports async operations.
@@ -19,38 +25,38 @@ from app.models.message import MessageSchema, MessageAction
 # here because the customer and item dbs have no relation to each other and
 # can be updated independently.
 customer_db: dict[UUID, Customer] = {
-    UUID("af516bd3-0dc2-493b-a5de-01e9ccf3566c"): Customer(
-        customer_id=UUID("af516bd3-0dc2-493b-a5de-01e9ccf3566c"),
+    customer_uuids[0]: Customer(
+        customer_id=customer_uuids[0],
         name="Alice",
         email="alice@example.com",
     ),
-    UUID("49a43a89-2319-413d-a74b-ec5108ce9a3b"): Customer(
-        customer_id=UUID("49a43a89-2319-413d-a74b-ec5108ce9a3b"),
+    customer_uuids[1]: Customer(
+        customer_id=customer_uuids[1],
         name="Bob",
         email="bob@example.com",
     ),
-    UUID("7f918cec-b723-4e0d-b355-6b7933b8823e"): Customer(
-        customer_id=UUID("7f918cec-b723-4e0d-b355-6b7933b8823e"),
+    customer_uuids[2]: Customer(
+        customer_id=customer_uuids[2],
         name="Charlie",
         email="charlie@example.com",
     ),
 }
 
 item_db: dict[UUID, Item] = {
-    UUID("7f3329cf-b45b-4e1e-b380-0b27bf9e6d46"): Item(
-        item_id=UUID("7f3329cf-b45b-4e1e-b380-0b27bf9e6d46"),
+    item_uuids[0]: Item(
+        item_id=item_uuids[0],
         name="Apple",
         quantity=10,
         price=0.5,
     ),
-    UUID("f6d1d4b5-1e9b-4b4b-8e4f-1f1b4f8d0c8f"): Item(
-        item_id=UUID("f6d1d4b5-1e9b-4b4b-8e4f-1f1b4f8d0c8f"),
+    item_uuids[1]: Item(
+        item_id=item_uuids[1],
         name="Banana",
         quantity=5,
         price=0.25,
     ),
-    UUID("f1c2c4b7-0a9a-4f2b-8d1e-1f1b4f8d0c8f"): Item(
-        item_id=UUID("f1c2c4b7-0a9a-4f2b-8d1e-1f1b4f8d0c8f"),
+    item_uuids[2]: Item(
+        item_id=item_uuids[2],
         name="Cherry",
         quantity=20,
         price=0.1,
@@ -92,6 +98,7 @@ async def process_message(message: str) -> tuple[str, bool]:
         message = MessageSchema().loads(message)
     except ValidationError as ve:
         print(json.dumps({"error": "Failed to parse message."}))
+        print(message)
         raise _MyBreak() from ve
 
     try:
@@ -124,11 +131,11 @@ async def process_message(message: str) -> tuple[str, bool]:
 
                 async with customer_lock:
                     for item in payload:
-                        customer_db[item.customer_id] = item
+                        customer_db[UUID(item.customer_id)] = item
             case MessageAction.CUSTOMER_DELETE:
                 async with customer_lock:
                     for item in message.payload:
-                        del customer_db[item]
+                        del customer_db[UUID(item)]
             case MessageAction.CUSTOMER_DELETE_ALL:
                 async with customer_lock:
                     customer_db = {}
