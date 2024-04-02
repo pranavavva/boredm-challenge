@@ -13,8 +13,7 @@ export default function App() {
     const [items, setItems] = React.useState<IItem[]>([]);
     const [customers, setCustomers] = React.useState<ICustomer[]>([]);
 
-    // update the state when a new message is received
-    // if the lastMessage isn't defined, keep the existing state
+    // update the state when a new message is received if the lastMessage isn't defined, keep the existing state
     React.useEffect(() => {
         setCustomers(lastMessage?.customer ? lastMessage.customer : customers);
         setItems(lastMessage?.item ? lastMessage.item : items);
@@ -62,11 +61,15 @@ export default function App() {
                     <Typography variant="h4" component="h1" gutterBottom>
                         BoreDM Full Stack Developer Final Challenge
                     </Typography>
+                    <Typography variant="h5" component="h2" gutterBottom>
+                        Customers
+                    </Typography>
                     <Box sx={{ height: 400, width: "100%" }}>
                         <DataGrid
                             rows={customers}
                             columns={customerColumns}
                             getRowId={(row) => row.customer_id}
+                            editMode="row"
                             initialState={{
                                 pagination: {
                                     paginationModel: {
@@ -74,17 +77,33 @@ export default function App() {
                                     },
                                 },
                             }}
+                            processRowUpdate={(newRow, oldRow) => {
+                                console.log("Processing row update", newRow, oldRow);
+                                sendPayload({
+                                    action: Action.CUSTOMER_UPDATE,
+                                    payload: [newRow],
+                                });
+
+                                return newRow;
+                            }}
+                            onProcessRowUpdateError={(error) => {
+                                console.error("error", error);
+                            }}
                             pageSizeOptions={[5]}
                             checkboxSelection
                             disableRowSelectionOnClick
                         />
                     </Box>
                 </Box>
+                <Typography variant="h5" component="h2" gutterBottom>
+                    Items
+                </Typography>
                 <Box sx={{ height: 400, width: "100%" }}>
                     <DataGrid
                         rows={items}
                         columns={itemColumns}
                         getRowId={(row) => row.item_id}
+                        editMode="row"
                         initialState={{
                             pagination: {
                                 paginationModel: {

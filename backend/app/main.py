@@ -1,3 +1,4 @@
+import traceback
 import asyncio
 import json
 from uuid import UUID, uuid4
@@ -99,6 +100,7 @@ async def process_message(message: str) -> tuple[str, bool]:
                     payload = CustomerSchema(many=True).load(message.payload)
                 except ValidationError as ve:
                     print(json.dumps({"error": "Failed to parse payload"}))
+                    print(traceback.format_exc())
                     raise _MyBreak() from ve
 
                 async with customer_lock:
@@ -113,13 +115,15 @@ async def process_message(message: str) -> tuple[str, bool]:
                 return CustomerSchema(many=True).dumps(customer_db.values()), False
             case MessageAction.CUSTOMER_UPDATE:
                 try:
-                    payload = CustomerSchema().load(message.payload)
+                    payload = CustomerSchema(many=True).load(message.payload)
                 except ValidationError as ve:
                     print(json.dumps({"error": "Failed to parse payload"}))
+                    print(traceback.format_exc())
                     raise _MyBreak() from ve
 
                 async with customer_lock:
-                    customer_db[payload.customer_id] = payload
+                    for item in payload:
+                        customer_db[item.customer_id] = item
             case MessageAction.CUSTOMER_DELETE:
                 async with customer_lock:
                     for item in message.payload:
@@ -132,6 +136,7 @@ async def process_message(message: str) -> tuple[str, bool]:
                     payload = ItemSchema(many=True).load(message.payload)
                 except ValidationError as ve:
                     print(json.dumps({"error": "Failed to parse payload"}))
+                    print(traceback.format_exc())
                     raise _MyBreak() from ve
 
                 async with item_lock:
@@ -146,10 +151,12 @@ async def process_message(message: str) -> tuple[str, bool]:
                     payload = ItemSchema().load(message.payload)
                 except ValidationError as ve:
                     print(json.dumps({"error": "Failed to parse payload"}))
+                    print(traceback.format_exc())
                     raise _MyBreak() from ve
 
                 async with item_lock:
-                    item_db[payload.item_id] = payload
+                    for item in payload:
+                        item_db[item.item_id] = item
             case MessageAction.ITEM_DELETE:
                 async with item_lock:
                     for item in message.payload:

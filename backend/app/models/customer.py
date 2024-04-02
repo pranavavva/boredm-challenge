@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from marshmallow import Schema, fields, post_load
+from marshmallow import Schema, fields, post_load, EXCLUDE
 
 
 class Customer:
@@ -17,7 +17,7 @@ class Customer:
 class CustomerSchema(Schema):
     """A simple customer schema. Customer has name, email."""
 
-    customer_id = fields.UUID(load_default=uuid4, dump_only=True)
+    customer_id = fields.UUID(load_default=uuid4)
     name = fields.String()
     email = fields.Email()
 
