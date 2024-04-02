@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useContext } from "react";
 import { SocketContext } from "./SocketProvider";
-import { IPayload } from "./types";
+import { IPayload, IStateResponse } from "./types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isIPayload = (payload: any): payload is IPayload => {
@@ -13,9 +13,9 @@ const isIPayload = (payload: any): payload is IPayload => {
     );
 };
 
-export const useSocket = (): [IPayload, (payload: IPayload) => void] => {
+export const useSocket = (): [IStateResponse | undefined, (payload: IPayload) => void] => {
     const socket = useContext(SocketContext);
-    const [lastMessage, setLastMessage] = useState<IPayload>({} as IPayload);
+    const [lastMessage, setLastMessage] = useState<IStateResponse | undefined>();
 
     const sendPayload = (payload: IPayload) => {
         if (!isIPayload(payload))

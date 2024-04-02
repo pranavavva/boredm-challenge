@@ -5,7 +5,7 @@ export enum Action {
     CUSTOMER_UPDATE = "customer:update",
     CUSTOMER_DELETE = "customer:delete",
     CUSTOMER_DELETE_ALL = "customer:delete-all",
- 
+
     ITEM_CREATE = "item:create",
     ITEM_READ = "item:read",
     ITEM_READ_ALL = "item:read-all",
@@ -18,5 +18,22 @@ export interface IPayload {
     // action must match one of the Action enum values
     action: Action;
     payload: object[];
+}
 
+export interface IStateResponse {
+    customer?: ICustomer[];
+    item?: IItem[];
+}
+
+export interface IItem {
+    item_id: string;
+    name: string;
+    quantity: number;
+    price: number;
+}
+
+export interface ICustomer {
+    customer_id: string;
+    name: string;
+    email: string;
 }

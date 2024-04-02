@@ -209,6 +209,17 @@ def init_app() -> Quart:
         conn_id = uuid4()
         task = asyncio.create_task(_receive(conn_id))
         try:
+            # send client the initial state
+            await websocket.send(
+                json.dumps(
+                    {
+                        "customer": CustomerSchema(many=True).dump(
+                            customer_db.values()
+                        ),
+                        "item": ItemSchema(many=True).dump(item_db.values()),
+                    }
+                ),
+            )
             # send messages to the client as they arrive
             async for message in broker.subscribe(conn_id):
                 await websocket.send(message)
