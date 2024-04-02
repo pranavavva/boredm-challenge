@@ -35,6 +35,7 @@ customer_db: dict[UUID, Customer] = {
         email="charlie@example.com",
     ),
 }
+
 item_db: dict[UUID, Item] = {
     UUID("7f3329cf-b45b-4e1e-b380-0b27bf9e6d46"): Item(
         item_id=UUID("7f3329cf-b45b-4e1e-b380-0b27bf9e6d46"),
@@ -148,7 +149,7 @@ async def process_message(message: str) -> tuple[str, bool]:
                 return ItemSchema(many=True).dumps(item_db.values()), False
             case MessageAction.ITEM_UPDATE:
                 try:
-                    payload = ItemSchema().load(message.payload)
+                    payload = ItemSchema(many=True).load(message.payload)
                 except ValidationError as ve:
                     print(json.dumps({"error": "Failed to parse payload"}))
                     print(traceback.format_exc())

@@ -111,6 +111,18 @@ export default function App() {
                                 },
                             },
                         }}
+                        processRowUpdate={(newRow, oldRow) => {
+                            console.log("Processing row update", newRow, oldRow);
+                            sendPayload({
+                                action: Action.ITEM_UPDATE,
+                                payload: [newRow],
+                            });
+
+                            return newRow;
+                        }}
+                        onProcessRowUpdateError={(error) => {
+                            console.error("error", error);
+                        }}
                         pageSizeOptions={[5]}
                         checkboxSelection
                         disableRowSelectionOnClick

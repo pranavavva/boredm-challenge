@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from marshmallow import Schema, fields, post_load, EXCLUDE
+from marshmallow import Schema, fields, post_load
 
 
 class Customer:
