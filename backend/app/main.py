@@ -26,17 +26,17 @@ item_uuids = [uuid4() for _ in range(STARTING_NUM_ITEMS)]
 # can be updated independently.
 customer_db: dict[UUID, Customer] = {
     customer_uuids[0]: Customer(
-        customer_id=customer_uuids[0],
+        id=customer_uuids[0],
         name="Alice",
         email="alice@example.com",
     ),
     customer_uuids[1]: Customer(
-        customer_id=customer_uuids[1],
+        id=customer_uuids[1],
         name="Bob",
         email="bob@example.com",
     ),
     customer_uuids[2]: Customer(
-        customer_id=customer_uuids[2],
+        id=customer_uuids[2],
         name="Charlie",
         email="charlie@example.com",
     ),
@@ -44,19 +44,19 @@ customer_db: dict[UUID, Customer] = {
 
 item_db: dict[UUID, Item] = {
     item_uuids[0]: Item(
-        item_id=item_uuids[0],
+        id=item_uuids[0],
         name="Apple",
         quantity=10,
         price=0.5,
     ),
     item_uuids[1]: Item(
-        item_id=item_uuids[1],
+        id=item_uuids[1],
         name="Banana",
         quantity=5,
         price=0.25,
     ),
     item_uuids[2]: Item(
-        item_id=item_uuids[2],
+        id=item_uuids[2],
         name="Cherry",
         quantity=20,
         price=0.1,
@@ -68,6 +68,12 @@ item_lock = asyncio.Lock()
 
 
 class _MyBreak(Exception):
+    # This is a clever trick to break out of the match statement below
+    # while also always sending the database state. If there is ever
+    # an error during message processing, we want to stop processing
+    # the message immediately. However, we also always want to keep
+    # the client in sync with the database state. This exception allows
+    # us to do that.
     pass
 
 
@@ -113,10 +119,10 @@ async def process_message(message: str) -> tuple[str, bool]:
 
                 async with customer_lock:
                     for item in payload:
-                        customer_db[item.customer_id] = item
+                        customer_db[item.id] = item
             case MessageAction.CUSTOMER_READ:
                 return (
-                    CustomerSchema().dumps(customer_db[message.payload["customer_id"]]),
+                    CustomerSchema().dumps(customer_db[message.payload["id"]]),
                     False,
                 )
             case MessageAction.CUSTOMER_READ_ALL:
@@ -131,7 +137,8 @@ async def process_message(message: str) -> tuple[str, bool]:
 
                 async with customer_lock:
                     for item in payload:
-                        customer_db[UUID(item.customer_id)] = item
+                        print(item.id)
+                        customer_db[UUID(item.id)] = item
             case MessageAction.CUSTOMER_DELETE:
                 async with customer_lock:
                     for item in message.payload:
@@ -149,9 +156,9 @@ async def process_message(message: str) -> tuple[str, bool]:
 
                 async with item_lock:
                     for item in payload:
-                        item_db[item.item_id] = item
+                        item_db[item.id] = item
             case MessageAction.ITEM_READ:
-                return ItemSchema().dumps(item_db[message.payload["item_id"]]), False
+                return ItemSchema().dumps(item_db[message.payload["id"]]), False
             case MessageAction.ITEM_READ_ALL:
                 return ItemSchema(many=True).dumps(item_db.values()), False
             case MessageAction.ITEM_UPDATE:
@@ -164,7 +171,7 @@ async def process_message(message: str) -> tuple[str, bool]:
 
                 async with item_lock:
                     for item in payload:
-                        item_db[item.item_id] = item
+                        item_db[item.id] = item
             case MessageAction.ITEM_DELETE:
                 async with item_lock:
                     for item in message.payload:
@@ -176,11 +183,6 @@ async def process_message(message: str) -> tuple[str, bool]:
                 print(json.dumps({"error": f"Invalid action: {message.action}"}))
                 raise _MyBreak()
     except _MyBreak:
-        # This is a clever trick to break out of the match statement
-        # while also always sending the database state. If there is ever
-        # an error during message processing, we want to  stop processing
-        # the message immediately. However, the client expects us to also
-        # always send the database state back to it.
         pass
 
     # return the new state by default
@@ -216,7 +218,7 @@ def init_app() -> Quart:
                     await broker.publish_to(conn_id, result)
 
     @application.route("/healthcheck")
-    async def healthcheck() -> str:
+    async def healthcheck() -> tuple[str, int]:
         return "OK", 200
 
     @application.websocket("/ws")

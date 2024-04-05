@@ -8,29 +8,27 @@ const websocket = new WebSocket(WEBSOCKET_URL);
 export const SocketContext = createContext(websocket);
 
 interface ISocketProvider {
-    children: ReactNode;
+  children: ReactNode;
 }
 
 export const SocketProvider = (props: ISocketProvider) => {
-    const [ws, setWs] = useState<WebSocket>(websocket);
+  const [ws, setWs] = useState<WebSocket>(websocket);
 
-    useEffect(() => {
-        const onClose = () => {
-            setTimeout(() => {
-                setWs(new WebSocket(WEBSOCKET_URL));
-            }, SOCKET_RECONNECT_TIMEOUT);
-        };
+  useEffect(() => {
+    const onClose = () => {
+      setTimeout(() => {
+        setWs(new WebSocket(WEBSOCKET_URL));
+      }, SOCKET_RECONNECT_TIMEOUT);
+    };
 
-        ws.addEventListener("close", onClose);
+    ws.addEventListener("close", onClose);
 
-        return () => {
-            ws.removeEventListener("close", onClose);
-        };
-    }, [ws]);
+    return () => {
+      ws.removeEventListener("close", onClose);
+    };
+  }, [ws]);
 
-    return (
-        <SocketContext.Provider value={ws}>
-            {props.children}
-        </SocketContext.Provider>
-    );
+  return (
+    <SocketContext.Provider value={ws}>{props.children}</SocketContext.Provider>
+  );
 };
