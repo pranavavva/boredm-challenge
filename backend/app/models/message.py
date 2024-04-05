@@ -34,27 +34,27 @@ class Message:
 
 
 class PayloadField(fields.Field):
+    """Represents the payload field of a message.
+    It can be a dict, a list of dicts, or a list of strings."""
+
     def _deserialize(self, value, attr, data, **kwargs):
         if isinstance(value, dict):
             # If the value is a dict, return it directly.
             return value
-        elif isinstance(value, list):
+        if isinstance(value, list):
             # Check if all elements are dicts.
             if all(isinstance(item, dict) for item in value):
                 return value
             # Check if all elements are strings.
-            elif all(isinstance(item, str) for item in value):
+            if all(isinstance(item, str) for item in value):
                 return value
-            else:
-                # If the list contains neither all dicts nor all strings, raise an error.
-                raise ValidationError(
-                    "All elements in the list must be dicts or strings."
-                )
-        else:
-            # If the input is neither a dict nor a list, raise an error.
-            raise ValidationError(
-                "Invalid input type. Must be a dict, a list of dicts, or a list of strings."
-            )
+
+            # If the list contains neither all dicts nor all strings, raise an error.
+            raise ValidationError("All elements in the list must be dicts or strings.")
+        # If the input is neither a dict nor a list, raise an error.
+        raise ValidationError(
+            "Invalid input type. Must be a dict, a list of dicts, or a list of strings."
+        )
 
 
 class MessageSchema(Schema):

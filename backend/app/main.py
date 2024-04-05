@@ -1,6 +1,7 @@
 import traceback
 import asyncio
 import json
+from pprint import pprint
 from uuid import UUID, uuid4
 
 from quart import Quart, websocket
@@ -103,8 +104,6 @@ async def process_message(message: str) -> tuple[str, bool]:
     try:
         message = MessageSchema().loads(message)
     except ValidationError as ve:
-        print(json.dumps({"error": "Failed to parse message."}))
-        print(message)
         raise _MyBreak() from ve
 
     try:
@@ -113,8 +112,6 @@ async def process_message(message: str) -> tuple[str, bool]:
                 try:
                     payload = CustomerSchema(many=True).load(message.payload)
                 except ValidationError as ve:
-                    print(json.dumps({"error": "Failed to parse payload"}))
-                    print(traceback.format_exc())
                     raise _MyBreak() from ve
 
                 async with customer_lock:
@@ -131,14 +128,11 @@ async def process_message(message: str) -> tuple[str, bool]:
                 try:
                     payload = CustomerSchema(many=True).load(message.payload)
                 except ValidationError as ve:
-                    print(json.dumps({"error": "Failed to parse payload"}))
-                    print(traceback.format_exc())
                     raise _MyBreak() from ve
 
                 async with customer_lock:
                     for item in payload:
-                        print(item.id)
-                        customer_db[UUID(item.id)] = item
+                        customer_db[item.id] = item
             case MessageAction.CUSTOMER_DELETE:
                 async with customer_lock:
                     for item in message.payload:
@@ -150,8 +144,6 @@ async def process_message(message: str) -> tuple[str, bool]:
                 try:
                     payload = ItemSchema(many=True).load(message.payload)
                 except ValidationError as ve:
-                    print(json.dumps({"error": "Failed to parse payload"}))
-                    print(traceback.format_exc())
                     raise _MyBreak() from ve
 
                 async with item_lock:
@@ -165,8 +157,6 @@ async def process_message(message: str) -> tuple[str, bool]:
                 try:
                     payload = ItemSchema(many=True).load(message.payload)
                 except ValidationError as ve:
-                    print(json.dumps({"error": "Failed to parse payload"}))
-                    print(traceback.format_exc())
                     raise _MyBreak() from ve
 
                 async with item_lock:
@@ -175,12 +165,11 @@ async def process_message(message: str) -> tuple[str, bool]:
             case MessageAction.ITEM_DELETE:
                 async with item_lock:
                     for item in message.payload:
-                        del item_db[item]
+                        del item_db[UUID(item)]
             case MessageAction.ITEM_DELETE_ALL:
                 async with item_lock:
                     item_db = {}
             case _:
-                print(json.dumps({"error": f"Invalid action: {message.action}"}))
                 raise _MyBreak()
     except _MyBreak:
         pass

@@ -161,11 +161,6 @@ export default function App() {
     const processRowUpdate =
         (action: Action) =>
         <R extends object>(newRow: R) => {
-            console.log("Sending payload:");
-            console.log({
-                action,
-                payload: [newRow],
-            });
             sendPayload({
                 action,
                 payload: [newRow],
