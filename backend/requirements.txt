@@ -20,5 +20,5 @@ priority==2.0.0
 python-dotenv==1.0.1
 Quart==0.19.4
 quart-cors==0.7.0
-Werkzeug==3.0.1
+Werkzeug==3.0.3
 wsproto==1.2.0
